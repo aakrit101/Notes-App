@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dynamic Notes Web App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { margin-top: 40px; }
+    .flashcard, .quiz-question { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+    .flashcard { cursor: pointer; transition: 0.3s ease; }
+    .flashcard:hover { background: #f0f0f0; }
+    .note-box { width: 100%; height: 200px; padding: 10px; }
+    .choice { margin: 5px 0; }
+    .result { font-weight: bold; color: green; }
+    input, textarea, button { margin: 5px 0; padding: 5px; }
+    .form-section { margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px; }
+    button { cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <h1>📚 Notes Web App</h1>
+
+  <!-- Flashcards -->
+  <h2>Flashcards</h2>
+  <div id="flashcards-container"></div>
+
+  <div class="form-section">
+    <h3>Add Flashcard</h3>
+    <input type="text" id="fc-question" placeholder="Question"><br>
+    <input type="text" id="fc-answer" placeholder="Answer"><br>
+    <button onclick="addFlashcard()">Add Flashcard</button>
+    <button onclick="deleteLastFlashcard()">🗑️ Delete Last Flashcard</button>
+  </div>
+
+  <!-- Notes -->
+  <h2>Notes</h2>
+  <textarea id="notes" class="note-box" placeholder="Write your notes here..."></textarea>
+
+  <!-- Quiz -->
+  <h2>Quiz</h2>
+  <div id="quiz-container"></div>
+
+  <div class="form-section">
+    <h3>Add Quiz Question</h3>
+    <input type="text" id="quiz-q" placeholder="Question"><br>
+    <input type="text" id="quiz-opt1" placeholder="Option 1"><br>
+    <input type="text" id="quiz-opt2" placeholder="Option 2"><br>
+    <input type="text" id="quiz-opt3" placeholder="Option 3"><br>
+    <input type="number" id="quiz-ans" placeholder="Correct Option # (1-3)"><br>
+    <button onclick="addQuiz()">Add Question</button>
+    <button onclick="deleteLastQuiz()">🗑️ Delete Last Quiz Question</button>
+  </div>
+
+  <button onclick="checkQuiz()">✅ Submit Quiz</button>
+  <p class="result" id="quiz-result"></p>
+
+  <script>
+    const flashcards = [];
+    const quiz = [];
+
+    function renderFlashcards() {
+      const container = document.getElementById("flashcards-container");
+      container.innerHTML = "";
+      flashcards.forEach((card) => {
+        const div = document.createElement("div");
+        div.className = "flashcard";
+        div.textContent = card.question;
+        div.onclick = () => {
+          div.textContent = div.textContent === card.question ? card.answer : card.question;
+        };
+        container.appendChild(div);
+      });
+    }
+
+    function addFlashcard() {
+      const q = document.getElementById("fc-question").value.trim();
+      const a = document.getElementById("fc-answer").value.trim();
+      if (!q || !a) return alert("Please fill in both fields.");
+      flashcards.push({ question: q, answer: a });
+      renderFlashcards();
+      document.getElementById("fc-question").value = "";
+      document.getElementById("fc-answer").value = "";
+    }
+
+    function deleteLastFlashcard() {
+      if (flashcards.length > 0) {
+        flashcards.pop();
+        renderFlashcards();
+      } else {
+        alert("No flashcards to delete!");
+      }
+    }
+
+    function renderQuiz() {
+      const container = document.getElementById("quiz-container");
+      container.innerHTML = "";
+      quiz.forEach((q, idx) => {
+        const div = document.createElement("div");
+        div.className = "quiz-question";
+
+        const questionP = document.createElement("p");
+        questionP.textContent = q.question;
+        div.appendChild(questionP);
+
+        q.choices.forEach((choice, cIdx) => {
+          const label = document.createElement("label");
+          label.className = "choice";
+          label.innerHTML = `
+            <input type="radio" name="q${idx}" value="${cIdx}" />
+            ${choice}
+          `;
+          div.appendChild(label);
+          div.appendChild(document.createElement("br"));
+        });
+
+        container.appendChild(div);
+      });
+    }
+
+    function addQuiz() {
+      const qText = document.getElementById("quiz-q").value.trim();
+      const opt1 = document.getElementById("quiz-opt1").value.trim();
+      const opt2 = document.getElementById("quiz-opt2").value.trim();
+      const opt3 = document.getElementById("quiz-opt3").value.trim();
+      const ans = parseInt(document.getElementById("quiz-ans").value) - 1;
+
+      if (!qText || !opt1 || !opt2 || !opt3 || ans < 0 || ans > 2) {
+        return alert("Please fill out all quiz fields correctly.");
+      }
+
+      quiz.push({
+        question: qText,
+        choices: [opt1, opt2, opt3],
+        answer: ans
+      });
+
+      renderQuiz();
+
+      document.getElementById("quiz-q").value = "";
+      document.getElementById("quiz-opt1").value = "";
+      document.getElementById("quiz-opt2").value = "";
+      document.getElementById("quiz-opt3").value = "";
+      document.getElementById("quiz-ans").value = "";
+    }
+
+    function deleteLastQuiz() {
+      if (quiz.length > 0) {
+        quiz.pop();
+        renderQuiz();
+      } else {
+        alert("No quiz questions to delete!");
+      }
+    }
+
+    function checkQuiz() {
+      let correct = 0;
+      quiz.forEach((q, idx) => {
+        const selected = document.querySelector(`input[name="q${idx}"]:checked`);
+        if (selected && parseInt(selected.value) === q.answer) correct++;
+      });
+      document.getElementById("quiz-result").textContent = `You got ${correct} out of ${quiz.length} correct!`;
+    }
+  </script>
+
+</body>
+</html>
