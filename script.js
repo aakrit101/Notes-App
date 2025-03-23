@@ -1,63 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dynamic Notes Web App</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h2 { margin-top: 40px; }
-    .flashcard, .quiz-question { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
-    .flashcard { cursor: pointer; transition: 0.3s ease; }
-    .flashcard:hover { background: #f0f0f0; }
-    .note-box { width: 100%; height: 200px; padding: 10px; }
-    .choice { margin: 5px 0; }
-    .result { font-weight: bold; color: green; }
-    input, textarea, button { margin: 5px 0; padding: 5px; }
-    .form-section { margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px; }
-    button { cursor: pointer; }
-  </style>
-</head>
-<body>
-
-  <h1>📚 Notes Web App</h1>
-
-  <!-- Flashcards -->
-  <h2>Flashcards</h2>
-  <div id="flashcards-container"></div>
-
-  <div class="form-section">
-    <h3>Add Flashcard</h3>
-    <input type="text" id="fc-question" placeholder="Question"><br>
-    <input type="text" id="fc-answer" placeholder="Answer"><br>
-    <button onclick="addFlashcard()">Add Flashcard</button>
-    <button onclick="deleteLastFlashcard()">🗑️ Delete Last Flashcard</button>
-  </div>
-
-  <!-- Notes -->
-  <h2>Notes</h2>
-  <textarea id="notes" class="note-box" placeholder="Write your notes here..."></textarea>
-
-  <!-- Quiz -->
-  <h2>Quiz</h2>
-  <div id="quiz-container"></div>
-
-  <div class="form-section">
-    <h3>Add Quiz Question</h3>
-    <input type="text" id="quiz-q" placeholder="Question"><br>
-    <input type="text" id="quiz-opt1" placeholder="Option 1"><br>
-    <input type="text" id="quiz-opt2" placeholder="Option 2"><br>
-    <input type="text" id="quiz-opt3" placeholder="Option 3"><br>
-    <input type="number" id="quiz-ans" placeholder="Correct Option # (1-3)"><br>
-    <button onclick="addQuiz()">Add Question</button>
-    <button onclick="deleteLastQuiz()">🗑️ Delete Last Quiz Question</button>
-  </div>
-
-  <button onclick="checkQuiz()">✅ Submit Quiz</button>
-  <p class="result" id="quiz-result"></p>
-
-  <script>
-    const flashcards = [];
+const flashcards = [];
     const quiz = [];
 
     function renderFlashcards() {
@@ -162,7 +103,29 @@
       });
       document.getElementById("quiz-result").textContent = `You got ${correct} out of ${quiz.length} correct!`;
     }
-  </script>
 
-</body>
-</html>
+    function askHuggingFace() {
+      const input = document.getElementById("hf-input").value.trim();
+      const responseEl = document.getElementById("hf-response");
+
+      if (!input) return alert("Please enter a prompt.");
+
+      responseEl.textContent = "⌛ Thinking...";
+
+      fetch("http://127.0.0.1:5000/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: `Answer this question: ${input}` })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.reply) {
+            responseEl.textContent = data.reply;
+          } else {
+            responseEl.textContent = "Error: " + data.error;
+          }
+        })
+        .catch(err => {
+          responseEl.textContent = "Network error: " + err.message;
+        });
+    }
